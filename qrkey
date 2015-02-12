@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+import zbar
+
+DEFAULT_VIDEO_DEVICE = '/dev/video0'
+
+
+class Scanner(object):
+
+    def __init__(self, device, debug=False):
+        self._processor = zbar.Processor()
+        self._processor.parse_config('enable')
+        self._processor.init(device)
+        self._processor.visible = debug
+
+    def scan(self):
+        self._processor.process_one()
+
+        for symbol in self._processor.results:
+            if not symbol.count:
+                return symbol.type, symbol.data
+
+if __name__ == '__main__':
+
+    scanner = Scanner(DEFAULT_VIDEO_DEVICE)
+
+    _, value = scanner.scan()
+
+    print value
