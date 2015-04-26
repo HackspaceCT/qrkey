@@ -15,6 +15,8 @@ description = 'qrkey scanner.'
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-d', '--debug', action='store_true', default=False,
                     help='enable debug')
+parser.add_argument('-t', '--timeout', action='store', type=int,
+                    help='set timeout (seconds)')
 
 
 class Scanner(object):
@@ -46,7 +48,7 @@ if __name__ == '__main__':
 
     scanner = Scanner(DEFAULT_VIDEO_DEVICE,
                       debug=args.debug,
-                      timeout=DEFAULT_TIMEOUT)
+                      timeout=args.timeout or DEFAULT_TIMEOUT)
 
     while True:
 
