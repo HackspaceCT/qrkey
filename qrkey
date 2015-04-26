@@ -12,7 +12,8 @@ DEFAULT_VIDEO_DEVICE = os.environ.get('QRKEY_VIDEO', None) or '/dev/video0'
 
 description = 'qrkey scanner.'
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument('--debug', action='store_true', default=False)
+parser.add_argument('-d', '--debug', action='store_true', default=False,
+                    help='enable debug')
 
 
 class Scanner(object):
