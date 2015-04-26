@@ -8,6 +8,7 @@ from time import sleep
 
 import zbar
 
+DEFAULT_TIMEOUT = os.environ.get('QRKEY_TIMEOUT', None) or 2  # seconds
 DEFAULT_VIDEO_DEVICE = os.environ.get('QRKEY_VIDEO', None) or '/dev/video0'
 
 description = 'qrkey scanner.'
@@ -18,16 +19,18 @@ parser.add_argument('-d', '--debug', action='store_true', default=False,
 
 class Scanner(object):
 
-    def __init__(self, device, debug=False):
+    def __init__(self, device, debug=False, timeout=1):
         self._processor = zbar.Processor()
         self._processor.parse_config('enable')
         self._processor.init(device)
         self._processor.visible = debug
 
+        self.timeout = timeout
+
     def scan(self):
 
         try:
-            self._processor.process_one()
+            self._processor.process_one(timeout=self.timeout)
         except zbar.WindowClosed:
             sys.exit(0)
 
@@ -35,15 +38,24 @@ class Scanner(object):
             if not symbol.count:
                 return symbol.type, symbol.data
 
+        return None, None
+
 if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    scanner = Scanner(DEFAULT_VIDEO_DEVICE, debug=args.debug)
+    scanner = Scanner(DEFAULT_VIDEO_DEVICE,
+                      debug=args.debug,
+                      timeout=DEFAULT_TIMEOUT)
 
     while True:
-        _, value = scanner.scan()
 
-        print value
+        try:
+            _, value = scanner.scan()
 
-        sleep(0.5)
+            if value:
+                print value
+
+            sleep(0.5)
+        except KeyboardInterrupt:
+            sys.exit(0)
