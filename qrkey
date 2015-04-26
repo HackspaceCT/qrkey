@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 
 from time import sleep
 
 import zbar
 
-DEFAULT_VIDEO_DEVICE = '/dev/video0'
+DEFAULT_VIDEO_DEVICE = os.environ.get('QRKEY_VIDEO', None) or '/dev/video0'
 
 description = 'qrkey scanner.'
 parser = argparse.ArgumentParser(description=description)
