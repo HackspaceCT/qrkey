@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import sys
 
 from time import sleep
 
@@ -23,7 +24,11 @@ class Scanner(object):
         self._processor.visible = debug
 
     def scan(self):
-        self._processor.process_one()
+
+        try:
+            self._processor.process_one()
+        except zbar.WindowClosed:
+            sys.exit(0)
 
         for symbol in self._processor.results:
             if not symbol.count:
