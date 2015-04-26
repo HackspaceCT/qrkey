@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
+import argparse
+
 from time import sleep
 
 import zbar
 
 DEFAULT_VIDEO_DEVICE = '/dev/video0'
+
+description = 'qrkey scanner.'
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('--debug', action='store_true', default=False)
 
 
 class Scanner(object):
@@ -24,7 +30,9 @@ class Scanner(object):
 
 if __name__ == '__main__':
 
-    scanner = Scanner(DEFAULT_VIDEO_DEVICE)
+    args = parser.parse_args()
+
+    scanner = Scanner(DEFAULT_VIDEO_DEVICE, debug=args.debug)
 
     while True:
         _, value = scanner.scan()
