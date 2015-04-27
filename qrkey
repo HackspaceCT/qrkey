@@ -17,6 +17,8 @@ parser.add_argument('-d', '--debug', action='store_true', default=False,
                     help='enable debug')
 parser.add_argument('-t', '--timeout', action='store', type=int,
                     help='set timeout (seconds)')
+parser.add_argument('-v', '--video', action='store', type=str,
+                    help='set video device')
 
 
 class Scanner(object):
@@ -46,7 +48,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    scanner = Scanner(DEFAULT_VIDEO_DEVICE,
+    scanner = Scanner(args.video or DEFAULT_VIDEO_DEVICE,
                       debug=args.debug,
                       timeout=args.timeout or DEFAULT_TIMEOUT)
 
