@@ -26,8 +26,12 @@ class Scanner(object):
     def __init__(self, device, debug=False, timeout=1):
         self._processor = zbar.Processor()
         self._processor.parse_config('enable')
-        self._processor.init(device)
         self._processor.visible = debug
+
+        try:
+            self._processor.init(device)
+        except zbar.SystemError as e:
+            sys.exit(e.message)
 
         self.timeout = timeout
 
