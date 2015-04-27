@@ -39,10 +39,7 @@ class Scanner(object):
 
     def scan(self):
 
-        try:
-            self._processor.process_one(timeout=self.timeout)
-        except zbar.WindowClosed:
-            sys.exit(0)
+        self._processor.process_one(timeout=self.timeout)
 
         for symbol in self._processor.results:
             if not symbol.count:
@@ -68,4 +65,6 @@ if __name__ == '__main__':
 
             sleep(0.5)
         except KeyboardInterrupt:
+            sys.exit(0)
+        except zbar.WindowClosed:
             sys.exit(0)
