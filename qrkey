@@ -8,10 +8,16 @@ import sys
 
 from time import sleep
 
+import cv2
+import numpy
 import zbar
 
+
 DEFAULT_TIMEOUT = os.environ.get('QRKEY_TIMEOUT', None) or 2  # seconds
-DEFAULT_VIDEO_DEVICE = os.environ.get('QRKEY_VIDEO', None) or '/dev/video0'
+DEFAULT_ZBAR_VIDEO_DEVICE = os.environ.get('QRKEY_VIDEO',
+                                           None) or '/dev/video0'
+DEFAULT_OPENCV_VIDEO_DEVICE = os.environ.get('QRKEY_VIDEO',
+                                             None) or 0
 
 description = 'qrkey scanner.'
 parser = argparse.ArgumentParser(description=description)
@@ -21,9 +27,17 @@ parser.add_argument('-t', '--timeout', action='store', type=int,
                     help='set timeout (seconds)')
 parser.add_argument('-v', '--video', action='store', type=str,
                     help='set video device')
+parser.add_argument('--opencv', action='store_true', default=False,
+                    help='use OpenCV to sample video')
 
 
-class Scanner(object):
+class BaseScanner(object):
+
+    def scan(self):
+        raise NotImplementedError
+
+
+class ZbarScanner(BaseScanner):
 
     def __init__(self, device, debug=False, timeout=1):
         self._processor = zbar.Processor()
@@ -47,11 +61,57 @@ class Scanner(object):
 
         return None, None
 
+
+class OpenCVScanner(BaseScanner):
+
+    def __init__(self, device, debug=False, timeout=1):
+        self.debug = debug
+        self.device = device
+        self.window = cv2.cv.NamedWindow('Debug', cv2.cv.CV_WINDOW_NORMAL)
+        self.capture = cv2.cv.CreateCameraCapture(self.device)
+        self._scanner = zbar.ImageScanner()
+        self._scanner.parse_config('enable')
+
+    def _process(self):
+        self.frame = cv2.cv.QueryFrame(self.capture)
+        self.aframe = numpy.asarray(self.frame[:, :])
+        g = cv2.cv.fromarray(self.aframe)
+        g = numpy.asarray(g)
+
+        imgray = cv2.cvtColor(g, cv2.COLOR_BGR2GRAY)
+        raw = str(imgray.data)
+        self.results = zbar.Image(self.frame.width,
+                                  self.frame.height,
+                                  'Y800',
+                                  raw)
+        self._scanner.scan(self.results)
+
+    def scan(self):
+
+        self._process()
+
+        for symbol in self.results:
+            if not symbol.count:
+                return symbol.type, symbol.data
+
+        if self.debug:
+            cv2.imshow('Debug', self.aframe)
+            cv2.cv.WaitKey(5)
+
+        return None, None
+
 if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    scanner = Scanner(args.video or DEFAULT_VIDEO_DEVICE,
+    if args.opencv:
+        Scanner = OpenCVScanner
+        video_device = args.video or DEFAULT_OPENCV_VIDEO_DEVICE
+    else:
+        Scanner = ZbarScanner
+        video_device = args.video or DEFAULT_ZBAR_VIDEO_DEVICE
+
+    scanner = Scanner(video_device,
                       debug=args.debug,
                       timeout=args.timeout or DEFAULT_TIMEOUT)
 
@@ -62,8 +122,8 @@ if __name__ == '__main__':
 
             if value:
                 print value
+                sleep(0.5)
 
-            sleep(0.5)
         except KeyboardInterrupt:
             sys.exit(0)
         except zbar.WindowClosed:
