@@ -3,10 +3,9 @@
 
 
 import argparse
+import imp
 import os
 import sys
-
-from time import sleep
 
 import cv2
 import numpy
@@ -29,6 +28,8 @@ parser.add_argument('-v', '--video', action='store', type=str,
                     help='set video device')
 parser.add_argument('--opencv', action='store_true', default=False,
                     help='use OpenCV to sample video')
+parser.add_argument('-p', '--plugin', action='store', type=str,
+                    help='path to the source file containing custom action')
 
 
 class BaseScanner(object):
@@ -111,6 +112,9 @@ if __name__ == '__main__':
         Scanner = ZbarScanner
         video_device = args.video or DEFAULT_ZBAR_VIDEO_DEVICE
 
+    if args.plugin:
+        action = imp.load_source('actions', args.plugin)
+
     scanner = Scanner(video_device,
                       debug=args.debug,
                       timeout=args.timeout or DEFAULT_TIMEOUT)
@@ -121,8 +125,11 @@ if __name__ == '__main__':
             _, value = scanner.scan()
 
             if value:
-                print value
-                sleep(0.5)
+                if args.plugin:
+                    action.do(value)
+                else:
+                    print value
+                    sys.exit(0)
 
         except KeyboardInterrupt:
             sys.exit(0)
