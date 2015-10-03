@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # QR code reader with plugin architecture for Python2.
-# Copyright (C) 2015  qrkey authors
+# Copyright (C) 2015 qrkey authors
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
